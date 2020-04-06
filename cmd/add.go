@@ -56,10 +56,14 @@ to quickly create a Cobra application.`,
 			os.Exit(1)
 		}
 
-		if err = touch(cfg.ConfigFile); err != nil {
-			fmt.Printf("Could not create project configuration: %v\n", err)
-			os.Exit(1)
-		}
+		// if err = touch(cfg.ConfigFile); err != nil {
+		// 	fmt.Printf("Could not touch %s: %v\n", cfg.ConfigFile, err)
+		// 	os.Exit(1)
+		// }
+
+		pc, _ := cfg.GetProjectConfig()
+		err = writeProjectConfig(pc, cfg.ConfigFile)
+		exitOn("Could not create project configuration", err)
 	},
 }
 

@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 const (
@@ -29,8 +29,8 @@ type shellConfig struct {
 	UsageHint   string
 }
 
-type projectConfig struct {
-	Go111Module string `yaml:"go111module"`
+type ProjectConfig struct {
+	Go111Module bool   `yaml:"go111module"`
 	GoPrivate   string `yaml:"goprivate"`
 }
 
@@ -154,7 +154,7 @@ func exitOn(msg string, err error) {
 	}
 }
 
-func readProjectConfig(configFile string) (*projectConfig, error) {
+func readProjectConfig(configFile string) (*ProjectConfig, error) {
 	if _, err := os.Stat(configFile); err != nil {
 		return nil, err
 	}
@@ -162,18 +162,49 @@ func readProjectConfig(configFile string) (*projectConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	var c projectConfig
-	err = yaml.Unmarshal(data, &c)
-	fmt.Println(data, err, c)
-	return &c, err
+	c := &ProjectConfig{}
+	err = yaml.Unmarshal(data, c)
+	// fmt.Println(string(data), err, c)
+	return c, err
 }
 
-func (shellCfg *shellConfig) Merge(p *projectConfig) {
+func (shellCfg *shellConfig) Merge(p *ProjectConfig) {
 	fmt.Println(p)
-	if p.Go111Module != "NULL" {
-		shellCfg.Go111Module = p.Go111Module
+	if p.Go111Module {
+		shellCfg.Go111Module = "on"
 	}
-	if p.Go111Module != "NULL" {
-		shellCfg.GoPrivate = p.GoPrivate
+
+	shellCfg.GoPrivate = p.GoPrivate
+}
+
+func (shellCfg *shellConfig) GetProjectConfig() (*ProjectConfig, error) {
+	c := &ProjectConfig{
+		Go111Module: shellCfg.Go111Module == "on",
+		GoPrivate:   shellCfg.GoPrivate,
 	}
+	return c, nil
+}
+
+func writeProjectConfig(pc *ProjectConfig, filename string) error {
+	err := touch(filename)
+	if err != nil {
+		return err
+	}
+
+	out, err := yaml.Marshal(pc)
+	if err != nil {
+		return err
+	}
+	return ioutil.WriteFile(filename, out, os.ModeExclusive)
+
+	// file, err := os.Open(filename)
+	// if err != nil {
+	// 	return err
+	// }
+	// defer file.Close()
+	// e := yaml.NewEncoder(file)
+	// defer e.Close()
+	// err = e.Encode(c)
+	// return err
+
 }
