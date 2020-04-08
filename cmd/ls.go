@@ -36,9 +36,14 @@ to quickly create a Cobra application.`,
 		if err != nil {
 			fmt.Println("Error listing projects", err)
 		}
-		fmt.Println("Available Projects")
-		for _, p := range list {
-			fmt.Println(p)
+		if len(list) > 0 {
+			fmt.Println("Available Projects")
+			for _, p := range list {
+				fmt.Println(p)
+			}
+		} else {
+			fmt.Println("No projects available")
+			fmt.Println("Create with the 'add' command")
 		}
 	},
 }

@@ -15,7 +15,7 @@ limitations under the License.
 */
 package main
 
-import "github.com/kmpm/goflip/cmd"
+import "github.com/kmpm/gopr/cmd"
 
 func main() {
 	cmd.Execute()

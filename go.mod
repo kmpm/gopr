@@ -1,4 +1,4 @@
-module github.com/kmpm/goflip
+module github.com/kmpm/gopr
 
 go 1.14
 

@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 
@@ -35,7 +34,7 @@ var defaultGO111MODULE string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "goflip",
+	Use:   "gopr",
 	Short: "A brief description of your application",
 	Long: `A longer description that spans multiple lines and likely contains
 examples and usage of using your application. For example:
@@ -67,7 +66,7 @@ func init() {
 
 	home, err := homedir.Dir()
 	if err != nil {
-		log.Fatal(err)
+		exitOn("could not get home directory", err)
 	}
 	userHome = home
 
@@ -75,8 +74,8 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.goflip.yaml)")
-	rootCmd.PersistentFlags().StringVar(&projectsRoot, "root", filepath.Join(userHome, ".goflip"), "$HOME/.goflip")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.gopr.yaml)")
+	rootCmd.PersistentFlags().StringVar(&projectsRoot, "root", filepath.Join(userHome, ".gopr"), "$HOME/.gopr")
 	rootCmd.PersistentFlags().StringVar(&defaultGOPRIVATE, "goprivate", "", "private go repostiories GOPRIVATE")
 	rootCmd.PersistentFlags().StringVar(&defaultGO111MODULE, "go111module", "on", "GO111MODULE")
 
@@ -94,9 +93,9 @@ func initConfig() {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
 	} else {
-		// Search config in home directory with name ".goflip" (without extension).
+		// Search config in home directory with name ".gopr" (without extension).
 		viper.AddConfigPath(userHome)
-		viper.SetConfigName(".goflip")
+		viper.SetConfigName(".gopr")
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match

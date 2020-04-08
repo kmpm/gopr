@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -35,15 +34,14 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
-			log.Fatal("You must provide a project name")
+			er("You must provide a project name", nil)
 			return
 		}
 		projectName := args[0]
 
 		cfg, err := shellCfgSet(projectName)
 		if err != nil {
-			fmt.Errorf("Error: %+v\n", err)
-			os.Exit(1)
+			exitOn("Error getting shell configuration", err)
 		}
 		if _, err := os.Stat(cfg.ProjectPath); !os.IsNotExist(err) {
 			fmt.Printf("Project path '%s' exists\n", cfg.ProjectPath)
@@ -62,6 +60,7 @@ to quickly create a Cobra application.`,
 		// }
 
 		pc, _ := cfg.GetProjectConfig()
+		// pc.Env["DOCKER_HOST"] = "ssh://anonymous@localhost"
 		err = writeProjectConfig(pc, cfg.ConfigFile)
 		exitOn("Could not create project configuration", err)
 	},

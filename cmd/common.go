@@ -36,6 +36,7 @@ type shellConfig struct {
 	Prefix      string
 	Delimiter   string
 	Suffix      string
+	Comment     string
 	ProjectPath string
 	ConfigFile  string
 	GoPath      string
@@ -43,12 +44,15 @@ type shellConfig struct {
 	Go111Module string
 	Path        string
 	UsageHint   string
+	Env         map[string]string
 }
 
-type ProjectConfig struct {
-	Go111Module bool   `yaml:"go111module"`
-	GoPrivate   string `yaml:"goprivate"`
-}
+var (
+	// ErrInvalidProjectName - The given name is not valid for projects
+	ErrInvalidProjectName = errors.New("invalid project name")
+	gitVersion            = "-DEV-"
+	appVersion            = "v0.0.0"
+)
 
 func shellCfgSet(projectName string) (*shellConfig, error) {
 	userShell, err := getShell(userShell)
@@ -57,13 +61,11 @@ func shellCfgSet(projectName string) (*shellConfig, error) {
 	}
 	projectpath := filepath.Join(projectsRoot, projectName)
 	gopath := filepath.Join(projectpath, "go")
-	//log.Printf("New GOPATH '%s'", gopath)
 	//get current
 	oldpath := os.Getenv("GOPATH")
 	if oldpath == "" {
 		oldpath = build.Default.GOPATH
 	}
-	//log.Printf("Current GOPATH '%s'", oldpath)
 
 	searchPath := os.Getenv("PATH")
 	newList := []string{
@@ -73,8 +75,6 @@ func shellCfgSet(projectName string) (*shellConfig, error) {
 	for _, p := range list {
 		if !strings.Contains(p, oldpath) {
 			newList = append(newList, p)
-		} else {
-			// log.Printf("Dropped '%s' from PATH", p)
 		}
 	}
 	searchPath = strings.Join(newList, string(os.PathListSeparator))
@@ -87,6 +87,11 @@ func shellCfgSet(projectName string) (*shellConfig, error) {
 		GoPath:      gopath,
 		GoPrivate:   defaultGOPRIVATE,
 		Go111Module: defaultGO111MODULE,
+		Env:         make(map[string]string),
+		Prefix:      "export ",
+		Suffix:      "\"\n",
+		Delimiter:   "=\"",
+		Comment:     "#",
 	}
 
 	switch userShell {
@@ -98,10 +103,7 @@ func shellCfgSet(projectName string) (*shellConfig, error) {
 		shellCfg.Prefix = "SET "
 		shellCfg.Suffix = "\n"
 		shellCfg.Delimiter = "="
-	default:
-		shellCfg.Prefix = "export "
-		shellCfg.Suffix = "\"\n"
-		shellCfg.Delimiter = "=\""
+		shellCfg.Comment = "REM "
 	}
 	return shellCfg, nil
 }
@@ -155,6 +157,7 @@ func find(slice []string, val string) (int, bool) {
 	return -1, false
 }
 
+//er shows a message and optional error and then os.Exit(1)
 func er(msg string, err error) {
 	if err == nil {
 		fmt.Println(msg)
@@ -164,63 +167,38 @@ func er(msg string, err error) {
 	os.Exit(1)
 }
 
+//exitOn exits with message and error IF err != nil
 func exitOn(msg string, err error) {
 	if err != nil {
 		er(msg, err)
 	}
 }
 
-func readProjectConfig(configFile string) (*ProjectConfig, error) {
-	if _, err := os.Stat(configFile); err != nil {
-		return nil, err
-	}
-	data, err := ioutil.ReadFile(configFile)
-	if err != nil {
-		return nil, err
-	}
-	c := &ProjectConfig{}
-	err = yaml.Unmarshal(data, c)
-	// fmt.Println(string(data), err, c)
-	return c, err
-}
-
-func (shellCfg *shellConfig) Merge(p *ProjectConfig) {
-	fmt.Println(p)
+func (shellCfg *shellConfig) Merge(p *project.Config) {
+	// fmt.Println(p)
 	if p.Go111Module {
 		shellCfg.Go111Module = "on"
 	}
 
 	shellCfg.GoPrivate = p.GoPrivate
+	for k, v := range p.Env {
+		shellCfg.Env[k] = v
+	}
 }
 
-func (shellCfg *shellConfig) GetProjectConfig() (*ProjectConfig, error) {
-	c := &ProjectConfig{
+func (shellCfg *shellConfig) GetProjectConfig() (*project.Config, error) {
+	c := &project.Config{
 		Go111Module: shellCfg.Go111Module == "on",
 		GoPrivate:   shellCfg.GoPrivate,
+		Env:         make(map[string]string),
 	}
 	return c, nil
 }
 
-func writeProjectConfig(pc *ProjectConfig, filename string) error {
-	err := touch(filename)
-	if err != nil {
-		return err
-	}
+func writeProjectConfig(c *project.Config, filename string) error {
+	return project.WriteConfig(c, filename)
+}
 
-	out, err := yaml.Marshal(pc)
-	if err != nil {
-		return err
-	}
-	return ioutil.WriteFile(filename, out, os.ModeExclusive)
-
-	// file, err := os.Open(filename)
-	// if err != nil {
-	// 	return err
-	// }
-	// defer file.Close()
-	// e := yaml.NewEncoder(file)
-	// defer e.Close()
-	// err = e.Encode(c)
-	// return err
-
+func readProjectConfig(filename string) (*project.Config, error) {
+	return project.ReadConfig(filename)
 }

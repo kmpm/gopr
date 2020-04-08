@@ -17,7 +17,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"text/template"
@@ -28,7 +27,9 @@ import (
 const (
 	//envTmpl = `{{ .Prefix }}DOCKER_TLS_VERIFY{{ .Delimiter }}{{ .DockerTLSVerify }}{{ .Suffix }}{{ .Prefix }}DOCKER_HOST{{ .Delimiter }}{{ .DockerHost }}{{ .Suffix }}{{ .Prefix }}DOCKER_CERT_PATH{{ .Delimiter }}{{ .DockerCertPath }}{{ .Suffix }}{{ .Prefix }}DOCKER_MACHINE_NAME{{ .Delimiter }}{{ .MachineName }}{{ .Suffix }}{{ if .ComposePathsVar }}{{ .Prefix }}COMPOSE_CONVERT_WINDOWS_PATHS{{ .Delimiter }}true{{ .Suffix }}{{end}}{{ if .NoProxyVar }}{{ .Prefix }}{{ .NoProxyVar }}{{ .Delimiter }}{{ .NoProxyValue }}{{ .Suffix }}{{end}}{{ .UsageHint }}`
 	//envTmpl contains the template to show
-	envTmpl = `{{ .Prefix }}GOPATH{{ .Delimiter }}{{ .GoPath }}{{ .Suffix }}{{ .Prefix }}GO111MODULE{{ .Delimiter }}{{ .Go111Module }}{{ .Suffix }}{{ .Prefix }}GOPRIVATE{{ .Delimiter }}{{ .GoPrivate }}{{ .Suffix }}{{.Prefix}}PATH{{.Delimiter}}{{.Path}}{{.Suffix}}{{ .UsageHint }}`
+	envTmpl = `{{ .Prefix }}GOPATH{{ .Delimiter }}{{ .GoPath }}{{ .Suffix }}{{ .Prefix }}GO111MODULE{{ .Delimiter }}{{ .Go111Module }}{{ .Suffix }}{{ .Prefix }}GOPRIVATE{{ .Delimiter }}{{ .GoPrivate }}{{ .Suffix }}{{.Prefix}}PATH{{.Delimiter}}{{.Path}}{{.Suffix}}{{.Comment}}
+{{ range $key, $value := .Env }}{{$.Prefix}}{{$key}}{{$.Delimiter}}{{$value}}{{$.Suffix}}{{end}}{{.Comment}}
+{{ .UsageHint }}`
 )
 
 var (
@@ -48,8 +49,7 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
-			log.Fatal("You must provide a project name")
-			return
+			exitOn("parameter error", ErrInvalidProjectName)
 		}
 		projectName := args[0]
 
@@ -70,6 +70,7 @@ to quickly create a Cobra application.`,
 
 		err = executeTemplateStdout(cfg)
 		exitOn("Unexpected error", err)
+
 	},
 }
 
