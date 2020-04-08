@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -39,12 +40,14 @@ to quickly create a Cobra application.`,
 		if len(list) > 0 {
 			fmt.Println("Available Projects")
 			for _, p := range list {
-				fmt.Println(p)
+				fmt.Println("-", p)
 			}
 		} else {
 			fmt.Println("No projects available")
-			fmt.Println("Create with the 'add' command")
 		}
+		fmt.Println("")
+		fmt.Println("Create projects with the 'add' command")
+		fmt.Println(os.Args[0], "for more help")
 	},
 }
 
