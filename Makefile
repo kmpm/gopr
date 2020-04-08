@@ -1,6 +1,6 @@
 APPNAME=gopr
 PKGBASE=github.com/kmpm/gopr
-APPVERSION?=v0.0.0
+APPVERSION?=v0.0.1
 
 # try to be os agnostic
 ifeq ($(OS),Windows_NT)

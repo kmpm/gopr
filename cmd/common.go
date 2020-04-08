@@ -125,8 +125,9 @@ func touch(filename string) error {
 	return nil
 }
 
+//projectList returns a list of folders which contents match a certain pattern
 func projectList() ([]string, error) {
-	pat := filepath.Join(filepath.Join(projectsRoot, "*"), projectConfigFile)
+	pat := filepath.Join(filepath.Join(projectsRoot, "*"), "go")
 	files, err := filepath.Glob(pat)
 	if err != nil {
 		return nil, err
