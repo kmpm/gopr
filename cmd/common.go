@@ -50,8 +50,6 @@ type shellConfig struct {
 var (
 	// ErrInvalidProjectName - The given name is not valid for projects
 	ErrInvalidProjectName = errors.New("invalid project name")
-	gitVersion            = "-DEV-"
-	appVersion            = "v0.0.0"
 )
 
 func shellCfgSet(projectName string) (*shellConfig, error) {

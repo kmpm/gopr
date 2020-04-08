@@ -1,6 +1,6 @@
 APPNAME=gopr
 PKGBASE=github.com/kmpm/gopr
-APPVERSION?=v0.0.1
+APPVERSION?=v0.0.2
 
 # try to be os agnostic
 ifeq ($(OS),Windows_NT)
@@ -57,27 +57,41 @@ else
     endif
 endif
 
-GIT_VERSION ?= $(shell git rev-parse HEAD)
+GIT_HASH?=$(shell git rev-parse HEAD)
+GIT_BRANCH?=$(shell git rev-parse --abbrev-ref HEAD)
 GIT_COMMIT?=$(shell git rev-parse --short HEAD)
 GIT_TAG?=$(shell git describe --abbrev=0 --tags --always --match "v*")
 GIT_DATE?=$(shell git log -1 --format="%ad" --date="format:%Y%m%d-%H%M%S")
+# ifeq ($(GIT_BRANCH), master) 
+# GIT_BRANCH:=
+# else
+# APPVERSION:=$(APPVERSION)-$(GIT_BRANCH)
+# endif
 
-LDFLAGS="-X '$(PKGBASE)/cmd.gitVersion=$(GIT_VERSION)' -X '$(PKGBASE)/cmd.appVersion=$(APPVERSION)'"
+LDFLAGS="-X '$(PKGBASE)/cmd.appVersion=$(APPVERSION)' -X '$(PKGBASE)/cmd.gitHash=$(GIT_HASH)' -X '$(PKGBASE)/cmd.gitBranch=$(GIT_BRANCH)'"
 
 DISTDIR?=$(call FixPath,./dist)
 BINFILE=$(call FixPath,$(DISTDIR)/$(APPNAME)$(BINEXT))
 BINARCHIVE=$(call FixPath,$(DISTDIR)/$(APPNAME)-$(APPVERSION)$(BINEXT))
 BUILDCMD=go build -ldflags $(LDFLAGS)
 
-.PHONY: build clean
+.PHONY: build clean help version
 
 build: $(DISTDIR)
 	$(BUILDCMD) -o $(BINFILE) .
 	$(CP) $(BINFILE) $(BINARCHIVE)
 
+version: 
+	go run -ldflags $(LDFLAGS) . version
+
 $(DISTDIR):
 	$(MKDIR) $@
 
-
 clean:
 	$(RMDIR) $(DISTDIR)
+
+help:
+	@echo APPNAME=$(APPNAME)
+	@echo APPVERSION=$(APPVERSION)
+	@echo GIT_BRANCH=$(GIT_BRANCH)
+	@echo GIT_TAG=$(GIT_TAG)
